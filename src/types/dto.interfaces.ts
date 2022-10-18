@@ -21,3 +21,9 @@ export interface BrandDto {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface ProductUploadResultDto {
+    total: number;
+    error: number;
+    errorRows: number[];
+}

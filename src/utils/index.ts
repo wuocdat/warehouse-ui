@@ -1,5 +1,10 @@
 import { AxiosError } from "axios";
-import { BrandDto, ProductTypeDto } from "types/dto.interfaces";
+import {
+    BrandDto,
+    ProductTypeDto,
+    ProductUploadResultDto,
+} from "types/dto.interfaces";
+import { PRODUCT_LIST } from "./constants";
 
 const getErrorMessage = (error: unknown): string => {
     if (error instanceof AxiosError) {
@@ -35,6 +40,15 @@ const formatToSelectOption = (types: ProductTypeDto[] | BrandDto[]) => {
             label: item.name,
         };
     });
+};
+
+export const setUploadResultText = (result: ProductUploadResultDto) => {
+    return PRODUCT_LIST.UPLOAD_RESULT.replace(
+        "{success}",
+        (result.total - result.error).toString()
+    )
+        .replace("{error}", result.error + "")
+        .replace("{errorRows}", result.errorRows.toLocaleString());
 };
 
 export { getErrorMessage, formatDate, formatToSelectOption };

@@ -1,10 +1,12 @@
 import {
+    Accordion,
+    AccordionButton,
+    AccordionItem,
+    AccordionPanel,
     Box,
     Button,
     Checkbox,
     CheckboxGroup,
-    Divider,
-    Flex,
     Grid,
     GridItem,
     HStack,
@@ -12,6 +14,10 @@ import {
     Input,
     InputGroup,
     InputLeftElement,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
     Stack,
     Table,
     TableCaption,
@@ -27,16 +33,19 @@ import {
 } from "@chakra-ui/react";
 import { MdReplay } from "react-icons/md";
 import {
+    AddIcon,
     ArrowDownIcon,
     ArrowUpIcon,
+    ChevronDownIcon,
+    MinusIcon,
     SearchIcon,
     SmallAddIcon,
 } from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Formik } from "formik";
 
-import { formatDate, getErrorMessage } from "utils";
+import { formatDate, getErrorMessage, setUploadResultText } from "utils";
 import { PRODUCT_LIST } from "utils/constants";
 import { ProductParams } from "types/params.interfaces";
 import ProductService from "services/product/products.service";
@@ -45,6 +54,8 @@ import ProductTypeService from "services/product/product-types.service";
 import { BrandDto, ProductTypeDto } from "types/dto.interfaces";
 import BrandService from "services/brand/brand.service";
 import TitleBox from "components/TitleBox";
+import Pagination from "components/Pagination";
+import fileDownload from "js-file-download";
 
 interface FilterType {
     content?: string;
@@ -58,19 +69,52 @@ const initialValues: FilterType = {
     brands: [],
 };
 
+const pageSize = 10;
+
 const ProductList = () => {
     const toast = useToast();
+
+    const [exportLoading, setExportLoading] = useState(false);
+    const [importLoading, setImportLoading] = useState(false);
+
+    const [productCount, setProductCount] = useState(1);
+
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const [searchFields, setSearchFields] = useState<ProductParams>({});
 
     const [products, setProducts] = useState<ProductDto[]>();
     const [productTypes, setProductTypes] = useState<ProductTypeDto[]>([]);
     const [brands, setBrands] = useState<BrandDto[]>([]);
-
-    const fetchProducts = async (params: ProductParams) => {
+    const fetchProducts = async () => {
         try {
-            const { data } = await ProductService.getProducts(params);
+            const { data } = await ProductService.getProducts({
+                ...searchFields,
+                currentPage,
+                pageSize,
+            });
 
             if (data) {
                 setProducts(data);
+            }
+        } catch (error) {
+            toast({
+                description: getErrorMessage(error),
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+    };
+
+    const fetchProductCount = async () => {
+        try {
+            const { data } = await ProductService.getProductCount({
+                ...searchFields,
+            });
+
+            if (data) {
+                setProductCount(data);
             }
         } catch (error) {
             toast({
@@ -110,11 +154,39 @@ const ProductList = () => {
         }
     };
 
+    const getProductExcelFile = async () => {
+        try {
+            setExportLoading(true);
+            const { data } = await ProductService.getExcelFile({
+                ...searchFields,
+            });
+            fileDownload(data, "product-list.xlsx");
+        } catch (error) {
+            toast({
+                description: getErrorMessage(error),
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setExportLoading(false);
+        }
+    };
+
     useEffect(() => {
-        fetchProducts({});
+        // fetchProducts();
         fetchProductTypes();
         fetchBrands();
     }, []);
+
+    useEffect(() => {
+        fetchProducts();
+    }, [currentPage, searchFields]);
+
+    useEffect(() => {
+        fetchProductCount();
+        setCurrentPage(1);
+    }, [searchFields]);
 
     const handleSubmit = (values: FilterType) => {
         const { content, productTypes, brands } = values;
@@ -128,7 +200,55 @@ const ProductList = () => {
 
         if (!!brands && brands.length !== 0) searchParams.brands = brands;
 
-        fetchProducts(searchParams);
+        setSearchFields(searchParams);
+    };
+
+    const handleDownloadTemplate = async () => {
+        try {
+            setImportLoading(true);
+            const { data } = await ProductService.downloadTemplate();
+            fileDownload(data, "template.xlsx");
+        } catch (error) {
+            toast({
+                description: getErrorMessage(error),
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setImportLoading(false);
+        }
+    };
+
+    const handleUploadFile = async (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        try {
+            setImportLoading(true);
+            if (event.target.files && event.target.files.length > 0) {
+                const formData = new FormData();
+                formData.append("file", event.target.files[0]);
+                const { data } = await ProductService.uploadExcelFile(formData);
+
+                if (data) {
+                    toast({
+                        description: setUploadResultText(data),
+                        status: "info",
+                        isClosable: true,
+                    });
+                }
+            }
+        } catch (error) {
+            toast({
+                description: getErrorMessage(error),
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setImportLoading(false);
+            event.target.value = "";
+        }
     };
 
     return (
@@ -138,12 +258,48 @@ const ProductList = () => {
                     leftIcon={<ArrowDownIcon />}
                     variant="outline"
                     size="sm"
+                    isLoading={exportLoading}
+                    onClick={getProductExcelFile}
                 >
                     {PRODUCT_LIST.EXPORT_FILE}
                 </Button>
-                <Button leftIcon={<ArrowUpIcon />} variant="outline" size="sm">
-                    {PRODUCT_LIST.IMPORT_FILE}
-                </Button>
+                <Box>
+                    <Menu>
+                        <MenuButton
+                            as={Button}
+                            variant="outline"
+                            size="sm"
+                            leftIcon={<ArrowUpIcon />}
+                            rightIcon={<ChevronDownIcon />}
+                            isLoading={importLoading}
+                        >
+                            {PRODUCT_LIST.IMPORT_FILE}
+                        </MenuButton>
+                        <MenuList>
+                            <MenuItem onClick={handleDownloadTemplate}>
+                                {PRODUCT_LIST.DOWNLOAD_TEMPLATE}
+                            </MenuItem>
+                            <MenuItem>
+                                <label
+                                    htmlFor="input-file"
+                                    style={{
+                                        width: "100%",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    {PRODUCT_LIST.IMPORT_FILE}
+                                </label>
+                                <Input
+                                    type="file"
+                                    id="input-file"
+                                    hidden
+                                    accept=".xlsx"
+                                    onChange={handleUploadFile}
+                                />
+                            </MenuItem>
+                        </MenuList>
+                    </Menu>
+                </Box>
                 <NavLink to="type">
                     <Button variant="outline" size="sm">
                         {PRODUCT_LIST.PRODUCT_TYPE}
@@ -189,74 +345,161 @@ const ProductList = () => {
                                             }
                                         />
                                     </InputGroup>
-                                    <TitleBox
-                                        title={PRODUCT_LIST.PRODUCT_TYPE}
+                                    <Accordion
+                                        allowMultiple
                                         w="100%"
+                                        defaultIndex={[0]}
                                     >
-                                        <CheckboxGroup
-                                            colorScheme="green"
-                                            value={values.productTypes}
-                                            onChange={(groupValues) => {
-                                                setValues({
-                                                    ...values,
-                                                    productTypes: [
-                                                        ...groupValues,
-                                                    ].map((item) => item + ""),
-                                                });
-                                            }}
-                                        >
-                                            <Stack
-                                                spacing={2}
-                                                direction="column"
-                                            >
-                                                {productTypes.map(
-                                                    (item, index) => {
-                                                        return (
-                                                            <Checkbox
-                                                                key={index}
-                                                                value={item._id}
+                                        <AccordionItem>
+                                            {({ isExpanded }) => (
+                                                <>
+                                                    <h2>
+                                                        <AccordionButton>
+                                                            <Box
+                                                                flex="1"
+                                                                textAlign="left"
                                                             >
-                                                                {item.name}
-                                                            </Checkbox>
-                                                        );
-                                                    }
-                                                )}
-                                            </Stack>
-                                        </CheckboxGroup>
-                                    </TitleBox>
-                                    <TitleBox
-                                        title={PRODUCT_LIST.BRAND}
-                                        w="100%"
-                                    >
-                                        <CheckboxGroup
-                                            colorScheme="green"
-                                            value={values.brands}
-                                            onChange={(groupValues) => {
-                                                setValues({
-                                                    ...values,
-                                                    brands: [
-                                                        ...groupValues,
-                                                    ].map((item) => item + ""),
-                                                });
-                                            }}
-                                        >
-                                            <Stack
-                                                spacing={2}
-                                                direction="column"
-                                            >
-                                                {brands.map((item, index) => {
-                                                    return (
-                                                        <Checkbox
-                                                            key={index}
-                                                            value={item._id}
+                                                                {
+                                                                    PRODUCT_LIST.PRODUCT_TYPE
+                                                                }
+                                                            </Box>
+                                                            {isExpanded ? (
+                                                                <MinusIcon fontSize="12px" />
+                                                            ) : (
+                                                                <AddIcon fontSize="12px" />
+                                                            )}
+                                                        </AccordionButton>
+                                                    </h2>
+                                                    <AccordionPanel pb={4}>
+                                                        <CheckboxGroup
+                                                            colorScheme="green"
+                                                            value={
+                                                                values.productTypes
+                                                            }
+                                                            onChange={(
+                                                                groupValues
+                                                            ) => {
+                                                                setValues({
+                                                                    ...values,
+                                                                    productTypes:
+                                                                        [
+                                                                            ...groupValues,
+                                                                        ].map(
+                                                                            (
+                                                                                item
+                                                                            ) =>
+                                                                                item +
+                                                                                ""
+                                                                        ),
+                                                                });
+                                                            }}
                                                         >
-                                                            {item.name}
-                                                        </Checkbox>
-                                                    );
-                                                })}
-                                            </Stack>
-                                        </CheckboxGroup>
-                                    </TitleBox>
+                                                            <Stack
+                                                                spacing={2}
+                                                                direction="column"
+                                                            >
+                                                                {productTypes.map(
+                                                                    (
+                                                                        item,
+                                                                        index
+                                                                    ) => {
+                                                                        return (
+                                                                            <Checkbox
+                                                                                key={
+                                                                                    index
+                                                                                }
+                                                                                value={
+                                                                                    item._id
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    item.name
+                                                                                }
+                                                                            </Checkbox>
+                                                                        );
+                                                                    }
+                                                                )}
+                                                            </Stack>
+                                                        </CheckboxGroup>
+                                                    </AccordionPanel>
+                                                </>
+                                            )}
+                                        </AccordionItem>
+                                        <AccordionItem>
+                                            {({ isExpanded }) => (
+                                                <>
+                                                    <h2>
+                                                        <AccordionButton>
+                                                            <Box
+                                                                flex="1"
+                                                                textAlign="left"
+                                                            >
+                                                                {
+                                                                    PRODUCT_LIST.BRAND
+                                                                }
+                                                            </Box>
+                                                            {isExpanded ? (
+                                                                <MinusIcon fontSize="12px" />
+                                                            ) : (
+                                                                <AddIcon fontSize="12px" />
+                                                            )}
+                                                        </AccordionButton>
+                                                    </h2>
+                                                    <AccordionPanel pb={4}>
+                                                        <CheckboxGroup
+                                                            colorScheme="green"
+                                                            value={
+                                                                values.brands
+                                                            }
+                                                            onChange={(
+                                                                groupValues
+                                                            ) => {
+                                                                setValues({
+                                                                    ...values,
+                                                                    brands: [
+                                                                        ...groupValues,
+                                                                    ].map(
+                                                                        (
+                                                                            item
+                                                                        ) =>
+                                                                            item +
+                                                                            ""
+                                                                    ),
+                                                                });
+                                                            }}
+                                                        >
+                                                            <Stack
+                                                                spacing={2}
+                                                                direction="column"
+                                                            >
+                                                                {brands.map(
+                                                                    (
+                                                                        item,
+                                                                        index
+                                                                    ) => {
+                                                                        return (
+                                                                            <Checkbox
+                                                                                key={
+                                                                                    index
+                                                                                }
+                                                                                value={
+                                                                                    item._id
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    item.name
+                                                                                }
+                                                                            </Checkbox>
+                                                                        );
+                                                                    }
+                                                                )}
+                                                            </Stack>
+                                                        </CheckboxGroup>
+                                                    </AccordionPanel>
+                                                </>
+                                            )}
+                                        </AccordionItem>
+                                    </Accordion>
                                     <HStack spacing={2} w="100%">
                                         <Button type="submit">
                                             {PRODUCT_LIST.FILTER_BUTTON}
@@ -275,7 +518,7 @@ const ProductList = () => {
                         )}
                     </Formik>
                 </GridItem>
-                <GridItem colSpan={4} bg="white" borderRadius={8}>
+                <GridItem colSpan={4} bg="white" borderRadius={8} pb={4}>
                     <TableContainer>
                         <Table variant="striped" colorScheme="teal">
                             <TableCaption>
@@ -326,6 +569,10 @@ const ProductList = () => {
                             </Tfoot>
                         </Table>
                     </TableContainer>
+                    <Pagination
+                        onPageChange={setCurrentPage}
+                        pageCount={Math.ceil(productCount / pageSize)}
+                    />
                 </GridItem>
             </Grid>
         </Box>

@@ -41,6 +41,7 @@ export const COMMON_TEXT = {
 export const PRODUCT_LIST = {
     EXPORT_FILE: "Xuất file",
     IMPORT_FILE: "Nhập file",
+    DOWNLOAD_TEMPLATE: "Tải file nhập mẫu",
     PRODUCT_TYPE: "Loại sản phẩm",
     ADD_PRODUCT: "Thêm sản phẩm",
     GENERAL_INFO: "Thông tin chung",
@@ -79,6 +80,10 @@ export const PRODUCT_LIST = {
 
     SEARCH_BAR: "Tìm kiếm theo mã sản phẩm, tên sản phẩm",
     FILTER_BUTTON: "Lọc",
+
+    UPLOAD_RESULT_TITLE: "Kết quả nhập sản phẩm",
+    UPLOAD_RESULT:
+        "Thêm thành công {success} sản phẩm, lỗi {error} sản phẩm (tại các dòng số : {errorRows})",
 };
 
 export const breadcrumbText = new Map<string, string>([
