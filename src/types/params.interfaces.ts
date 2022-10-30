@@ -28,3 +28,18 @@ export interface ProductParams {
     tax?: boolean;
     active?: boolean;
 }
+
+export interface ProductTypeParams {
+    name?: string;
+    code?: string;
+}
+
+export interface FindSuppliersParams {
+    name?: string;
+    code?: string;
+}
+
+export interface FindImportOrdersParams {
+    name?: string;
+    code?: string;
+}

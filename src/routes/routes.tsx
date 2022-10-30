@@ -22,6 +22,9 @@ import CustomerReport from "pages/Admin/CustomerReport";
 import Overview from "pages/Admin/Overview";
 import NewProduct from "pages/Admin/ProductList/NewProduct";
 import ProductType from "pages/Admin/ProductList/ProductType";
+import ProductInfo from "pages/Admin/ProductList/ProductInfo";
+import NewSupplier from "pages/Admin/Supplier/NewSupplier";
+import NewImportOrder from "pages/Admin/Importation/NewImportOrder";
 
 export const subRoutes: RoutesType[] = [
     {
@@ -42,6 +45,13 @@ export const subRoutes: RoutesType[] = [
                 layout: "/admin",
                 path: "/products/list",
                 component: ProductList,
+            },
+            {
+                name: SIDEBAR_CONSTANT.PRODUCT_LIST,
+                layout: "/admin",
+                path: "/products/list/:id",
+                component: ProductInfo,
+                hide: true,
             },
             {
                 name: SIDEBAR_CONSTANT.ADD_PRODUCT,
@@ -70,10 +80,24 @@ export const subRoutes: RoutesType[] = [
                 component: Importation,
             },
             {
+                name: SIDEBAR_CONSTANT.IMPORT_GOODS,
+                layout: "/admin",
+                path: "/products/import_goods/add",
+                component: NewImportOrder,
+                hide: true,
+            },
+            {
                 name: SIDEBAR_CONSTANT.SUPPLIER,
                 layout: "/admin",
                 path: "/products/supplier",
                 component: Supplier,
+            },
+            {
+                name: SIDEBAR_CONSTANT.SUPPLIER,
+                layout: "/admin",
+                path: "/products/supplier/add",
+                component: NewSupplier,
+                hide: true,
             },
         ],
     },

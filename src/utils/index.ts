@@ -43,13 +43,20 @@ const formatToSelectOption = (types: ProductTypeDto[] | BrandDto[]) => {
 };
 
 export const setUploadResultText = (result: ProductUploadResultDto) => {
-    return PRODUCT_LIST.UPLOAD_RESULT.replace(
-        "{success}",
-        (result.total - result.error).toString()
-    )
-        .replace("{error}", result.error + "")
-        .replace("{errorRows}", result.errorRows.toLocaleString());
+    return !!result.error
+        ? PRODUCT_LIST.UPLOAD_RESULT.replace(
+              "{success}",
+              (result.total - result.error).toString()
+          )
+              .replace("{error}", result.error + "")
+              .replace("{errorRows}", result.errorRows.toLocaleString())
+        : PRODUCT_LIST.UPLOAD_RESULT.slice(
+              0,
+              PRODUCT_LIST.UPLOAD_RESULT.indexOf(",")
+          ).replace("{success}", (result.total - result.error).toString());
 };
+
+export const isEmpty = (str: string): boolean => str === "";
 
 export { getErrorMessage, formatDate, formatToSelectOption };
 export { SIDEBAR as SIDEBAR_CONSTANT } from "./constants";

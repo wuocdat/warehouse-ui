@@ -18,6 +18,13 @@ import {
     MenuButton,
     MenuItem,
     MenuList,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
     Stack,
     Table,
     TableCaption,
@@ -28,6 +35,7 @@ import {
     Th,
     Thead,
     Tr,
+    useDisclosure,
     useToast,
     VStack,
 } from "@chakra-ui/react";
@@ -37,23 +45,24 @@ import {
     ArrowDownIcon,
     ArrowUpIcon,
     ChevronDownIcon,
+    DeleteIcon,
+    EditIcon,
     MinusIcon,
     SearchIcon,
     SmallAddIcon,
 } from "@chakra-ui/icons";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { Formik } from "formik";
 
 import { formatDate, getErrorMessage, setUploadResultText } from "utils";
-import { PRODUCT_LIST } from "utils/constants";
+import { COMMON_TEXT, PRODUCT_LIST } from "utils/constants";
 import { ProductParams } from "types/params.interfaces";
 import ProductService from "services/product/products.service";
 import { ProductDto } from "types/product/product.dto";
 import ProductTypeService from "services/product/product-types.service";
 import { BrandDto, ProductTypeDto } from "types/dto.interfaces";
 import BrandService from "services/brand/brand.service";
-import TitleBox from "components/TitleBox";
 import Pagination from "components/Pagination";
 import fileDownload from "js-file-download";
 
@@ -69,10 +78,14 @@ const initialValues: FilterType = {
     brands: [],
 };
 
-const pageSize = 10;
-
 const ProductList = () => {
     const toast = useToast();
+
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
+    const [pageSize, setPageSize] = useState(10);
+
+    const [deleteProductID, setDeleteProductID] = useState<string>();
 
     const [exportLoading, setExportLoading] = useState(false);
     const [importLoading, setImportLoading] = useState(false);
@@ -188,6 +201,10 @@ const ProductList = () => {
         setCurrentPage(1);
     }, [searchFields]);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [pageSize]);
+
     const handleSubmit = (values: FilterType) => {
         const { content, productTypes, brands } = values;
 
@@ -231,6 +248,7 @@ const ProductList = () => {
                 const { data } = await ProductService.uploadExcelFile(formData);
 
                 if (data) {
+                    fetchProducts();
                     toast({
                         description: setUploadResultText(data),
                         status: "info",
@@ -251,8 +269,59 @@ const ProductList = () => {
         }
     };
 
+    const handleDelete = async () => {
+        try {
+            const { data } = await ProductService.deleteOne(
+                deleteProductID || ""
+            );
+
+            if (data) {
+                toast({
+                    description: data.message,
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                });
+                setProducts((prev) => {
+                    return [...prev!].filter((product) => {
+                        return product._id !== deleteProductID;
+                    });
+                });
+            }
+        } catch (error) {
+            toast({
+                description: getErrorMessage(error),
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            onClose();
+        }
+    };
+
     return (
         <Box>
+            <Modal isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>
+                        {PRODUCT_LIST.DELETE_PRODUCT_TITLE}
+                    </ModalHeader>
+                    <ModalCloseButton />
+
+                    <ModalBody>{PRODUCT_LIST.DELETE_PRODUCT_MESSAGE}</ModalBody>
+
+                    <ModalFooter>
+                        <Button colorScheme="blue" mr={3} onClick={onClose}>
+                            {COMMON_TEXT.CLOSE}
+                        </Button>
+                        <Button variant="ghost" onClick={handleDelete}>
+                            {COMMON_TEXT.DELETE}
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
             <Stack direction="row" spacing={4}>
                 <Button
                     leftIcon={<ArrowDownIcon />}
@@ -520,18 +589,20 @@ const ProductList = () => {
                 </GridItem>
                 <GridItem colSpan={4} bg="white" borderRadius={8} pb={4}>
                     <TableContainer>
-                        <Table variant="striped" colorScheme="teal">
+                        <Table variant="striped" colorScheme="teal" size="sm">
                             <TableCaption>
                                 Imperial to metric conversion factors
                             </TableCaption>
                             <Thead>
                                 <Tr>
+                                    <Th>{COMMON_TEXT.ROW_NUMBER}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_PRODUCT}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_TYPE}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_BRAND}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_SELLABLE}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_QUANTITY}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_CREATED_DATE}</Th>
+                                    <Th>{PRODUCT_LIST.PRODUCT_ACTION}</Th>
                                 </Tr>
                             </Thead>
                             <Tbody>
@@ -539,7 +610,12 @@ const ProductList = () => {
                                     products.map((product, index) => {
                                         return (
                                             <Tr key={index}>
-                                                <Td>{product.name}</Td>
+                                                <Td>{index + 1}</Td>
+                                                <Td>
+                                                    <Link to={product._id}>
+                                                        {product.name}
+                                                    </Link>
+                                                </Td>
                                                 <Td>
                                                     {product.productType.name}
                                                 </Td>
@@ -553,25 +629,47 @@ const ProductList = () => {
                                                         product.createdAt
                                                     )}
                                                 </Td>
+                                                <Td>
+                                                    <IconButton
+                                                        aria-label="delete product"
+                                                        icon={<DeleteIcon />}
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            setDeleteProductID(
+                                                                product._id
+                                                            );
+                                                            onOpen();
+                                                        }}
+                                                    />
+                                                    <IconButton
+                                                        aria-label="edit product"
+                                                        icon={<EditIcon />}
+                                                        variant="ghost"
+                                                    />
+                                                </Td>
                                             </Tr>
                                         );
                                     })}
                             </Tbody>
                             <Tfoot>
                                 <Tr>
+                                    <Th>{COMMON_TEXT.ROW_NUMBER}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_PRODUCT}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_TYPE}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_BRAND}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_SELLABLE}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_QUANTITY}</Th>
                                     <Th>{PRODUCT_LIST.TABLE_CREATED_DATE}</Th>
+                                    <Th>{PRODUCT_LIST.PRODUCT_ACTION}</Th>
                                 </Tr>
                             </Tfoot>
                         </Table>
                     </TableContainer>
                     <Pagination
                         onPageChange={setCurrentPage}
-                        pageCount={Math.ceil(productCount / pageSize)}
+                        onSizeChange={setPageSize}
+                        pageSize={pageSize}
+                        total={productCount}
                     />
                 </GridItem>
             </Grid>

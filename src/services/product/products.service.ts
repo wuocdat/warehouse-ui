@@ -1,12 +1,16 @@
 import { ProductDto } from "types/product/product.dto";
 import api from "services/api";
 import { CreateProductParams } from "types/params.interfaces";
-import { ProductUploadResultDto } from "types/dto.interfaces";
+import { MessageDto, ProductUploadResultDto } from "types/dto.interfaces";
 
 const createNew = (params: CreateProductParams) => {
     return api.post<ProductDto>("products", {
         ...params,
     });
+};
+
+const getProductById = (id: string) => {
+    return api.get<ProductDto>(`products/${id}`);
 };
 
 const getProducts = (params: any) => {
@@ -42,6 +46,12 @@ const uploadExcelFile = (data: FormData) => {
     });
 };
 
+const deleteOne = (id: string) => {
+    return api.delete<MessageDto>("products/delete-one", {
+        params: { id },
+    });
+};
+
 const ProductService = {
     createNew,
     getProducts,
@@ -49,6 +59,8 @@ const ProductService = {
     getExcelFile,
     downloadTemplate,
     uploadExcelFile,
+    deleteOne,
+    getProductById,
 };
 
 export default ProductService;
