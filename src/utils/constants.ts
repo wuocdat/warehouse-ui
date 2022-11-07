@@ -51,6 +51,11 @@ export const COMMON_TEXT = {
     STATUS: "Trạng thái",
     ACTIVE: "Đang giao dịch",
     DEACTIVATE: "Ngưng giao dịch",
+    QUANTITY: "Số lượng",
+    UNIT: "Đơn vị",
+    PRICE: "Giá",
+    COST: "Phí",
+    TOTAL: "Thành tiền",
 };
 
 export const PAGINATION_TEXT = {

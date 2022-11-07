@@ -1,4 +1,5 @@
-import { PaymentsEnum } from "./enum";
+import { ProductDto } from "./product/product.dto";
+import { ImportOrderStatusE, PaymentsEnum } from "./enum";
 
 interface CommonFields {
     createdAt: string;
@@ -83,4 +84,28 @@ export interface SupplierDto extends CommonFields {
 
 export interface ImportOrderDto extends CommonFields {
     name: string;
+}
+
+export interface ImportOrderDto extends CommonFields {
+    _id: string;
+    code: string;
+    supplier: SupplierDto;
+    product: ProductDto;
+    status: ImportOrderStatusE;
+    deliveryDate: string;
+    quantity: number;
+    price: number;
+    cost?: number;
+    note?: string;
+}
+
+export interface CreateImportOrderDto {
+    supplier: string;
+    product: string;
+    status: ImportOrderStatusE;
+    deliveryDate: string;
+    quantity: number;
+    price: number;
+    cost?: number;
+    note?: string;
 }

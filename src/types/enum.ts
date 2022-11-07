@@ -3,3 +3,10 @@ export enum PaymentsEnum {
     TRANSFER,
     CASH,
 }
+
+export enum ImportOrderStatusE {
+    CREATE,
+    BROWSING,
+    IMPORT,
+    FINISH,
+}

@@ -56,6 +56,10 @@ export const setUploadResultText = (result: ProductUploadResultDto) => {
           ).replace("{success}", (result.total - result.error).toString());
 };
 
+export const setFirstLetterToUpCase = (text: string) => {
+    return text[0].toUpperCase() + text.substring(1);
+};
+
 export const isEmpty = (str: string): boolean => str === "";
 
 export { getErrorMessage, formatDate, formatToSelectOption };
