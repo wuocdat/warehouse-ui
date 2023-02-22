@@ -83,10 +83,6 @@ export interface SupplierDto extends CommonFields {
 }
 
 export interface ImportOrderDto extends CommonFields {
-    name: string;
-}
-
-export interface ImportOrderDto extends CommonFields {
     _id: string;
     code: string;
     supplier: SupplierDto;
@@ -100,12 +96,13 @@ export interface ImportOrderDto extends CommonFields {
 }
 
 export interface CreateImportOrderDto {
-    supplier: string;
-    product: string;
+    supplier?: string;
+    product?: string;
     status: ImportOrderStatusE;
     deliveryDate: string;
     quantity: number;
     price: number;
     cost?: number;
     note?: string;
+    code?: string;
 }

@@ -40,6 +40,7 @@ export interface FindSuppliersParams {
 }
 
 export interface FindImportOrdersParams {
-    name?: string;
     code?: string;
+    pageSize: number;
+    currentPage: number;
 }

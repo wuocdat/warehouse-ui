@@ -25,6 +25,7 @@ import ProductType from "pages/Admin/ProductList/ProductType";
 import ProductInfo from "pages/Admin/ProductList/ProductInfo";
 import NewSupplier from "pages/Admin/Supplier/NewSupplier";
 import NewImportOrder from "pages/Admin/Importation/NewImportOrder";
+import IOrderInfo from "pages/Admin/Importation/IOrderInfo";
 
 export const subRoutes: RoutesType[] = [
     {
@@ -78,6 +79,13 @@ export const subRoutes: RoutesType[] = [
                 layout: "/admin",
                 path: "/products/import_goods",
                 component: Importation,
+            },
+            {
+                name: SIDEBAR_CONSTANT.IMPORT_GOODS,
+                layout: "/admin",
+                path: "/products/import_goods/:id",
+                component: IOrderInfo,
+                hide: true,
             },
             {
                 name: SIDEBAR_CONSTANT.IMPORT_GOODS,

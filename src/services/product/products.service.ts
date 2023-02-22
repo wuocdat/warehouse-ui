@@ -19,6 +19,10 @@ const getProducts = (params: any) => {
     });
 };
 
+const getAllProducts = () => {
+    return api.get<ProductDto[]>("products/all");
+};
+
 const getProductCount = (params: any) => {
     return api.get<number>("products/count", {
         params,
@@ -55,6 +59,7 @@ const deleteOne = (id: string) => {
 const ProductService = {
     createNew,
     getProducts,
+    getAllProducts,
     getProductCount,
     getExcelFile,
     downloadTemplate,

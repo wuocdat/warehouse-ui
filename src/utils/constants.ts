@@ -56,6 +56,7 @@ export const COMMON_TEXT = {
     PRICE: "Giá",
     COST: "Phí",
     TOTAL: "Thành tiền",
+    NOTE: "Ghi chú",
 };
 
 export const PAGINATION_TEXT = {
@@ -143,6 +144,7 @@ export const SUPPLIER = {
     WARDS: "Phường xã",
     PAYMENTS: "Hình thức thanh toán",
     NOTE: "Mô tả về nhà cung cấp",
+    INFO: "Thông tin nhà cung cấp",
 };
 
 export const IMPORT_ORDER = {
@@ -157,6 +159,10 @@ export const IMPORT_ORDER = {
     BROWSING: "Duyệt",
     IMPORT: "Nhập kho",
     DONE: "Hoàn thành",
+    PAY_TO_SUPPLIER: "Thanh toán cho nhà cung cấp",
+    IMPORT_GOODS_INTO_WAREHOUSE: "Nhập hàng vào kho",
+    CHOOSE_ACTION: "Chọn thao tác",
+    ENTER_CODE: "Nhập mã đơn",
 };
 
 export const breadcrumbText = new Map<string, string>([
@@ -175,6 +181,10 @@ export const PAYMENTS = {
     TRANSFER: "Chuyển khoản",
     CASH: "Tiền mặt",
     ERROR: "Chưa chọn phương pháp thanh toán",
+};
+
+export const ERROR_MESSAGES = {
+    EMPTY_FIELD: "Trường này không được trống",
 };
 
 export const colorSchemePaymentsOptions = [

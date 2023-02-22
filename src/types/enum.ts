@@ -6,7 +6,7 @@ export enum PaymentsEnum {
 
 export enum ImportOrderStatusE {
     CREATE,
-    BROWSING,
+    APPROVED,
     IMPORT,
     FINISH,
 }

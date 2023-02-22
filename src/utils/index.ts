@@ -1,10 +1,13 @@
+import { ProductDto } from "./../types/product/product.dto";
 import { AxiosError } from "axios";
 import {
     BrandDto,
     ProductTypeDto,
     ProductUploadResultDto,
+    SupplierDto,
 } from "types/dto.interfaces";
 import { PRODUCT_LIST } from "./constants";
+import { ImportOrderStatusE } from "types/enum";
 
 const getErrorMessage = (error: unknown): string => {
     if (error instanceof AxiosError) {
@@ -31,6 +34,18 @@ const formatDate = (stringDate: string) => {
     return `${date.getFullYear()}/${monthString}/${currentDate}`;
 };
 
+const formatNumber = (number: number, separator: string): string => {
+    let counter = Math.floor(number.toString().length / 3);
+    let result = number.toString();
+    for (let i = 1; i <= counter; i++) {
+        result =
+            result.slice(0, -3 * i - i + 1) +
+            separator +
+            result.slice(-3 * i - i + 1);
+    }
+    return result[0] === separator ? result.replace(separator, "") : result;
+};
+
 const formatToSelectOption = (types: ProductTypeDto[] | BrandDto[]) => {
     const result = [...types];
 
@@ -41,6 +56,37 @@ const formatToSelectOption = (types: ProductTypeDto[] | BrandDto[]) => {
         };
     });
 };
+
+const formatSupplierOption = (suppliers: SupplierDto[]) => {
+    const result = [...suppliers];
+
+    return result.map((item) => {
+        return {
+            value: item,
+            label: item.name,
+        };
+    });
+};
+
+const formatProductOption = (products: ProductDto[]) => {
+    const result = [...products];
+
+    return result.map((item) => {
+        return {
+            value: item,
+            label: item.name,
+        };
+    });
+};
+
+const formatIOrderEnum = (iOrderE: ImportOrderStatusE): string =>
+    iOrderE == ImportOrderStatusE.FINISH ? "Hoàn thành" : "Đang giao dịch";
+
+const formatIOrderEnumByPayMent = (iOrderE: ImportOrderStatusE): string =>
+    iOrderE > 0 ? "Đã thanh toán" : "Chưa thanh toán";
+
+const formatIOrderEnumByImport = (iOrderE: ImportOrderStatusE): string =>
+    iOrderE > 1 ? "Đã nhập" : "Chờ nhập";
 
 export const setUploadResultText = (result: ProductUploadResultDto) => {
     return !!result.error
@@ -62,5 +108,15 @@ export const setFirstLetterToUpCase = (text: string) => {
 
 export const isEmpty = (str: string): boolean => str === "";
 
-export { getErrorMessage, formatDate, formatToSelectOption };
+export {
+    getErrorMessage,
+    formatDate,
+    formatToSelectOption,
+    formatSupplierOption,
+    formatProductOption,
+    formatNumber,
+    formatIOrderEnum,
+    formatIOrderEnumByPayMent,
+    formatIOrderEnumByImport,
+};
 export { SIDEBAR as SIDEBAR_CONSTANT } from "./constants";
